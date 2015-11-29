@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, View
 
-from core.models import Day, Season, Match, Period, Player, Table
+from core.models import Match, Period, Player, RED, COMPLETED, IDLE, YELLOW, APPROVED, BRIEF
 
 
 def named_tuple_fetchall(cursor):
@@ -110,7 +110,7 @@ class TableView(View):
         league_level = kwargs["league_level"]
         table_type = kwargs["table_type"]
 
-        if table_type not in (Table.BRIEF, Table.YELLOW, Table.RED,):
+        if table_type not in (BRIEF, YELLOW, RED,):
             return HttpResponse(json.dumps({"error" : "Only types brief, yellow and red allowed"}), status=400, content_type="application/json")
 
         standings = calculate_table(league_level, table_type)
@@ -136,7 +136,7 @@ class MatchView(View):
         except Match.DoesNotExist:
             return HttpResponse(json.dumps({"error" : "Match does not exist"}), status=404, content_type="application/json")
 
-        if match.status == Match.APPROVED:
+        if match.status == APPROVED:
             return HttpResponse(json.dumps({"error" : "Match already approved"}), status=403, content_type="application/json")
 
         for key in body.keys():
@@ -145,7 +145,7 @@ class MatchView(View):
 
         if "status" in body:
             status = body["status"]
-            if status > Match.COMPLETED or status < Match.IDLE:
+            if status > COMPLETED or status < IDLE:
                 return HttpResponse(json.dumps({"error" : "Only statuses 0, 1 and 2 allowed"}), status=400, content_type="application/json")
             match.status = body["status"]
             match.save()
@@ -232,7 +232,7 @@ def calculate_table(league_level, table_type):
         red_score = 0
         yellow_goals = 0
         red_goals = 0
-        if row.status == Match.APPROVED:
+        if row.status == APPROVED:
             for period in periods:
                 yellow_goals += period[0]
                 red_goals += period[1]
@@ -241,39 +241,39 @@ def calculate_table(league_level, table_type):
                 elif period[1] > period[0]:
                     red_score += 1
 
-            if table_type != Table.RED:
+            if table_type != RED:
                 table[row.yellow_id]["played"] += 1
                 table[row.yellow_id]["goals_for"] += yellow_goals
                 table[row.yellow_id]["goals_against"] += red_goals
-            if table_type != Table.YELLOW:
+            if table_type != YELLOW:
                 table[row.red_id]["played"] += 1
                 table[row.red_id]["goals_for"] += red_goals
                 table[row.red_id]["goals_against"] += yellow_goals
 
             if yellow_score == 2 and red_score == 0 and table_type:
-                if table_type != Table.RED:
+                if table_type != RED:
                     table[row.yellow_id]["wins"] += 1
                     table[row.yellow_id]["points"] += 3
-                if table_type != Table.YELLOW:
+                if table_type != YELLOW:
                     table[row.red_id]["losses"] += 1
             elif yellow_score == 2 and red_score == 1:
-                if table_type != Table.RED:
+                if table_type != RED:
                     table[row.yellow_id]["overtime_wins"] += 1
                     table[row.yellow_id]["points"] += 2
-                if table_type != Table.YELLOW:
+                if table_type != YELLOW:
                     table[row.red_id]["overtime_losses"] += 1
                     table[row.yellow_id]["points"] += 1
             elif yellow_score == 1 and red_score == 2:
-                if table_type != Table.RED:
+                if table_type != RED:
                     table[row.yellow_id]["overtime_losses"] += 1
                     table[row.yellow_id]["points"] += 1
-                if table_type != Table.YELLOW:
+                if table_type != YELLOW:
                     table[row.red_id]["overtime_wins"] += 1
                     table[row.yellow_id]["points"] += 2
             elif yellow_score == 0 and red_score == 2:
-                if table_type != Table.RED:
+                if table_type != RED:
                     table[row.yellow_id]["losses"] += 1
-                if table_type != Table.YELLOW:
+                if table_type != YELLOW:
                     table[row.red_id]["wins"] += 1
                     table[row.yellow_id]["points"] += 3
 

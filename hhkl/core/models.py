@@ -32,13 +32,14 @@ class Day(models.Model):
         return "S%dL%s Day #%d" % (self.league.season_id, self.league_id, self.number,)
 
 
-class Match(models.Model):
-    IDLE = 0
-    RUNNING = 1
-    COMPLETED = 2
-    APPROVED = 3
-    POSTPONED = 4
+IDLE = 0
+RUNNING = 1
+COMPLETED = 2
+APPROVED = 3
+POSTPONED = 4
 
+
+class Match(models.Model):
     STATUSES = (
         (IDLE, 'Idle'),
         (RUNNING, 'Running'),
@@ -61,11 +62,12 @@ class Period(models.Model):
     red = models.IntegerField()
 
 
-class Table(models.Model):
-    BRIEF = 'brief'
-    YELLOW = 'yellow'
-    RED = 'red'
+BRIEF = 'brief'
+YELLOW = 'yellow'
+RED = 'red'
 
+
+class Table(models.Model):
     TYPES = (
         (BRIEF, 'Brief'),
         (YELLOW, 'Yellow'),
