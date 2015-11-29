@@ -57,9 +57,12 @@ class MatchesView(View):
         for period in periods:
             scores[period.match_id].append((period.yellow, period.red,))
 
-        days = []
+        days = {}
         for row in rows:
-            days.append({
+            if not days.get(row.day):
+                days[row.day]["matches"] = []
+                days[row.day]["name"] = row.day
+            days[row.day]["matches"].append({
                 "id": row.id,
                 "yellow": {
                     "id": row.yellow_id,
@@ -75,7 +78,7 @@ class MatchesView(View):
                 "score": scores.get(row.id)
             })
 
-        return HttpResponse(json.dumps({"days": days}), content_type="application/json")
+        return HttpResponse(json.dumps({"days": days.values()}), content_type="application/json")
 
 
 class PlayersView(View):
