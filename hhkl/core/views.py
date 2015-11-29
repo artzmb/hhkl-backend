@@ -35,11 +35,11 @@ class MatchesView(View):
                 red.alias AS red_alias,
                 core_match.status AS status
             FROM core_match
-                JOIN core_player red ON core_match.red_id = red.id
-                JOIN core_player yellow ON core_match.yellow_id = yellow.id
-                JOIN core_day day ON core_match.day_id = day.number
-                JOIN core_league ON day.league_id = core_league.id
-                JOIN core_season ON core_league.season_id = core_season.id
+            JOIN core_player red ON core_match.red_id = red.id
+            JOIN core_player yellow ON core_match.yellow_id = yellow.id
+            JOIN core_day day ON core_match.day_id = day.number
+            JOIN core_league ON day.league_id = core_league.id
+            JOIN core_season ON core_league.season_id = core_season.id
             WHERE core_league.level = %s
                 AND core_season.id = (SELECT core_season.id FROM core_season ORDER BY core_season.id DESC LIMIT 1)
         """, (league_level,))
@@ -76,3 +76,30 @@ class MatchesView(View):
             })
 
         return HttpResponse(json.dumps({"days": days}), content_type="application/json")
+
+
+class PlayersView(View):
+    def get(self, request, *args, **kwargs):
+        league_level = kwargs["league_level"]
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT core_player.id AS id, core_player.name AS name, core_player.alias AS alias
+            FROM core_player
+            JOIN core_league ON core_player.league_id = core_league.id
+            JOIN core_season ON core_league.season_id = core_season.id
+            WHERE core_league.level = %s
+              AND core_season.id = (SELECT core_season.id FROM core_season ORDER BY core_season.id DESC LIMIT 1)
+        """, (league_level,))
+
+        rows = named_tuple_fetchall(cursor)
+        players = []
+        for row in rows:
+            players.append({
+                "id": row.id,
+                "name": row.name,
+                "alias": row.alias,
+            })
+
+        return HttpResponse(json.dumps({"players": players}), content_type="application/json")
+
+    

@@ -8,13 +8,14 @@ from django.contrib import admin
 
 admin.autodiscover()
 
-from core.views import IndexView, MatchesView
+from core.views import IndexView, MatchesView, PlayersView
 
 urlpatterns = patterns(
     '',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', IndexView.as_view(), name="index"),
-    url(r'^api/league/(?P<league_level>\w+)/matches/$', MatchesView.as_view())
+    url(r'^api/league/(?P<league_level>\w+)/matches/$', MatchesView.as_view()),
+    url(r'^api/league/(?P<league_level>\w+)/players/$', PlayersView.as_view()),
 ) + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 
 # http://stackoverflow.com/questions/8258417
