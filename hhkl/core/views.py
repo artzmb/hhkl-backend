@@ -60,6 +60,7 @@ class MatchesView(View):
         days = {}
         for row in rows:
             if not days.get(row.day):
+                days[row.day] = {}
                 days[row.day]["matches"] = []
                 days[row.day]["name"] = row.day
             days[row.day]["matches"].append({
