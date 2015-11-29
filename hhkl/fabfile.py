@@ -7,7 +7,7 @@ def production_env():
     "Production environment"
     env.hosts = ['artzmb.com']
     env.user = 'hhkl'
-    env.path = '/webapps/hhkl/hhkl'
+    env.path = '/webapps/hhkl/hhkl-backend/hhkl'
 
 
 def restart_webserver():
@@ -22,7 +22,7 @@ def deploy():
         with cd(env.path):
             run('git pull origin master')
             run('find . -name "*.mo" -print -delete')
-            run('python manage.py compilemessages')
+            #run('python manage.py compilemessages')
             run('python manage.py collectstatic --noinput')
 
             run('pip install -r requirements.txt')
