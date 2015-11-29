@@ -1,6 +1,7 @@
 from django.db import models
 
 
+
 class Season(models.Model):
     def __unicode__(self):
         return "Season #%d" % (self.id,)
@@ -32,12 +33,18 @@ class Day(models.Model):
 
 
 class Match(models.Model):
+    IDLE = 0
+    RUNNING = 1
+    COMPLETED = 2
+    APPROVED = 3
+    POSTPONED = 4
+
     STATUSES = (
-        (0, 'Idle'),
-        (1, 'Running'),
-        (2, 'Completed'),
-        (3, 'Approved'),
-        (4, 'Postponed')
+        (IDLE, 'Idle'),
+        (RUNNING, 'Running'),
+        (COMPLETED, 'Completed'),
+        (APPROVED, 'Approved'),
+        (POSTPONED, 'Postponed')
     )
     day = models.ForeignKey(Day)
     yellow = models.ForeignKey(Player, related_name='yellow')
@@ -55,10 +62,14 @@ class Period(models.Model):
 
 
 class Table(models.Model):
+    BRIEF = 'brief'
+    YELLOW = 'yellow'
+    RED = 'red'
+
     TYPES = (
-        ('brief', 'Brief'),
-        ('yellow', 'Yellow'),
-        ('red', 'Red')
+        (BRIEF, 'Brief'),
+        (YELLOW, 'Yellow'),
+        (RED, 'Red')
     )
     league = models.OneToOneField(League)
     type = models.CharField(choices=TYPES, max_length=50)

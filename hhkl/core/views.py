@@ -7,7 +7,7 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, View
 
-from core.models import Day, Season, Match, Period
+from core.models import Day, Season, Match, Period, Player, Table
 
 
 def named_tuple_fetchall(cursor):
@@ -106,7 +106,16 @@ class PlayersView(View):
 
 
 class TableView(View):
-    pass
+    def get(self, request, *args, **kwargs):
+        league_level = kwargs["league_level"]
+        table_type = kwargs["table_type"]
+
+        if table_type not in (Table.BRIEF, Table.YELLOW, Table.RED,):
+            return HttpResponse(json.dumps({"error" : "Only types brief, yellow and red allowed"}), status=400, content_type="application/json")
+
+        standings = calculate_table(league_level, table_type)
+
+        return HttpResponse(json.dumps({"standings": standings}), content_type="application/json")
 
 
 class MatchView(View):
@@ -120,18 +129,24 @@ class MatchView(View):
         try:
             body = json.loads(request.body)
         except ValueError:
-            return HttpResponse(status=400)
+            return HttpResponse(json.dumps({"error" : "Bad json"}), status=400, content_type="application/json")
 
         try:
             match = Match.objects.select_related().get(pk=match_id)
         except Match.DoesNotExist:
-            return HttpResponse(status=404)
+            return HttpResponse(json.dumps({"error" : "Match does not exist"}), status=404, content_type="application/json")
+
+        if match.status == Match.APPROVED:
+            return HttpResponse(json.dumps({"error" : "Match already approved"}), status=403, content_type="application/json")
 
         for key in body.keys():
             if key != "status" and key != "score":
-                return HttpResponse(status=400)
+                return HttpResponse(json.dumps({"error" : "Only status and score field allowed"}), status=400, content_type="application/json")
 
         if "status" in body:
+            status = body["status"]
+            if status > Match.COMPLETED or status < Match.IDLE:
+                return HttpResponse(json.dumps({"error" : "Only statuses 0, 1 and 2 allowed"}), status=400, content_type="application/json")
             match.status = body["status"]
             match.save()
         if "score" in body:
@@ -152,6 +167,7 @@ class MatchView(View):
                 "name": match.red.name,
                 "alias": match.red.alias,
             },
+            "status": match.status,
             "score": []
         }
 
@@ -160,3 +176,114 @@ class MatchView(View):
             response["score"].append((period.yellow, period.red,))
 
         return HttpResponse(json.dumps(response), content_type="application/json")
+
+
+def calculate_table(league_level, table_type):
+    cursor = connection.cursor()
+    cursor.execute("""
+        SELECT
+            core_match.id AS id,
+            yellow.id AS yellow_id,
+            red.id AS red_id,
+            core_match.status AS status
+        FROM core_match
+        JOIN core_player red ON core_match.red_id = red.id
+        JOIN core_player yellow ON core_match.yellow_id = yellow.id
+        JOIN core_day day ON core_match.day_id = day.number
+        JOIN core_league ON day.league_id = core_league.id
+        JOIN core_season ON core_league.season_id = core_season.id
+        WHERE core_league.level = %s
+            AND core_season.id = (SELECT core_season.id FROM core_season ORDER BY core_season.id DESC LIMIT 1)
+    """, (league_level,))
+
+    rows = named_tuple_fetchall(cursor)
+    match_ids = []
+    scores = {}
+    for row in rows:
+        match_ids.append(row.id)
+        scores[row.id] = []
+
+    periods = Period.objects.filter(match__id__in=match_ids).all()
+    for period in periods:
+        scores[period.match_id].append((period.yellow, period.red,))
+
+    table = {}
+    players = Player.objects.filter(league__level=league_level)
+    for player in players:
+        table[player.id] = {
+            "played": 0,
+            "player": {
+                "id": player.id,
+                "name": player.name,
+                "alias": player.alias
+            },
+            "wins": 0,
+            "overtime_wins": 0,
+            "overtime_losses": 0,
+            "losses": 0,
+            "goals_for": 0,
+            "goals_against": 0,
+            "points": 0
+        }
+
+    for row in rows:
+        periods = scores.get(row.id)
+        yellow_score = 0
+        red_score = 0
+        yellow_goals = 0
+        red_goals = 0
+        if row.status == Match.APPROVED:
+            for period in periods:
+                yellow_goals += period[0]
+                red_goals += period[1]
+                if period[0] > period[1]:
+                    yellow_score += 1
+                elif period[1] > period[0]:
+                    red_score += 1
+
+            if table_type != Table.RED:
+                table[row.yellow_id]["played"] += 1
+                table[row.yellow_id]["goals_for"] += yellow_goals
+                table[row.yellow_id]["goals_against"] += red_goals
+            if table_type != Table.YELLOW:
+                table[row.red_id]["played"] += 1
+                table[row.red_id]["goals_for"] += red_goals
+                table[row.red_id]["goals_against"] += yellow_goals
+
+            if yellow_score == 2 and red_score == 0 and table_type:
+                if table_type != Table.RED:
+                    table[row.yellow_id]["wins"] += 1
+                    table[row.yellow_id]["points"] += 3
+                if table_type != Table.YELLOW:
+                    table[row.red_id]["losses"] += 1
+            elif yellow_score == 2 and red_score == 1:
+                if table_type != Table.RED:
+                    table[row.yellow_id]["overtime_wins"] += 1
+                    table[row.yellow_id]["points"] += 2
+                if table_type != Table.YELLOW:
+                    table[row.red_id]["overtime_losses"] += 1
+                    table[row.yellow_id]["points"] += 1
+            elif yellow_score == 1 and red_score == 2:
+                if table_type != Table.RED:
+                    table[row.yellow_id]["overtime_losses"] += 1
+                    table[row.yellow_id]["points"] += 1
+                if table_type != Table.YELLOW:
+                    table[row.red_id]["overtime_wins"] += 1
+                    table[row.yellow_id]["points"] += 2
+            elif yellow_score == 0 and red_score == 2:
+                if table_type != Table.RED:
+                    table[row.yellow_id]["losses"] += 1
+                if table_type != Table.YELLOW:
+                    table[row.red_id]["wins"] += 1
+                    table[row.yellow_id]["points"] += 3
+
+    standings = table.values()
+
+    standings.sort(key=lambda row: row["player"]["name"])
+    standings.sort(key=lambda row: row["goals_for"] - row["goals_against"], reverse=True)
+    standings.sort(key=lambda row: row["overtime_wins"])
+    standings.sort(key=lambda row: row["wins"])
+    standings.sort(key=lambda row: row["points"])
+
+    return standings
+
