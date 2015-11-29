@@ -283,9 +283,14 @@ def calculate_table(league_level, table_type):
 
     standings.sort(key=lambda row: row["player"]["name"])
     standings.sort(key=lambda row: row["goalsFor"] - row["goalsAgainst"], reverse=True)
-    standings.sort(key=lambda row: row["overtimeWins"])
-    standings.sort(key=lambda row: row["wins"])
-    standings.sort(key=lambda row: row["points"])
+    standings.sort(key=lambda row: row["overtimeWins"], reverse=True)
+    standings.sort(key=lambda row: row["wins"], reverse=True)
+    standings.sort(key=lambda row: row["points"], reverse=True)
+
+    i = 1
+    for row in standings:
+        row["position"] = i
+        i += 1
 
     return standings
 
