@@ -23,7 +23,7 @@ def deploy():
             run('git pull origin master')
             run('find . -name "*.mo" -print -delete')
             #run('python manage.py compilemessages')
-            run('python manage.py collectstatic --noinput')
+            run('r')
 
             run('pip install -r requirements.txt')
 
