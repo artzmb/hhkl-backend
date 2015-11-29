@@ -57,11 +57,9 @@ class MatchesView(View):
         for period in periods:
             scores[period.match_id].append((period.yellow, period.red,))
 
-        days = {}
+        days = []
         for row in rows:
-            if not days.get(row.day):
-                days[row.day] = []
-            days[row.day].append({
+            days.append({
                 "id": row.id,
                 "yellow": {
                     "id": row.yellow_id,
@@ -218,11 +216,11 @@ def calculate_table(league_level, table_type):
                 "alias": player.alias
             },
             "wins": 0,
-            "overtime_wins": 0,
-            "overtime_losses": 0,
+            "overtimeWins": 0,
+            "overtimeLosses": 0,
             "losses": 0,
-            "goals_for": 0,
-            "goals_against": 0,
+            "goalsFor": 0,
+            "goalsAgainst": 0,
             "points": 0
         }
 
@@ -243,12 +241,12 @@ def calculate_table(league_level, table_type):
 
             if table_type != RED:
                 table[row.yellow_id]["played"] += 1
-                table[row.yellow_id]["goals_for"] += yellow_goals
-                table[row.yellow_id]["goals_against"] += red_goals
+                table[row.yellow_id]["goalsFor"] += yellow_goals
+                table[row.yellow_id]["goalsAgainst"] += red_goals
             if table_type != YELLOW:
                 table[row.red_id]["played"] += 1
-                table[row.red_id]["goals_for"] += red_goals
-                table[row.red_id]["goals_against"] += yellow_goals
+                table[row.red_id]["goalsFor"] += red_goals
+                table[row.red_id]["goalsAgainst"] += yellow_goals
 
             if yellow_score == 2 and red_score == 0 and table_type:
                 if table_type != RED:
@@ -258,17 +256,17 @@ def calculate_table(league_level, table_type):
                     table[row.red_id]["losses"] += 1
             elif yellow_score == 2 and red_score == 1:
                 if table_type != RED:
-                    table[row.yellow_id]["overtime_wins"] += 1
+                    table[row.yellow_id]["overtimeWins"] += 1
                     table[row.yellow_id]["points"] += 2
                 if table_type != YELLOW:
-                    table[row.red_id]["overtime_losses"] += 1
+                    table[row.red_id]["overtimeLosses"] += 1
                     table[row.yellow_id]["points"] += 1
             elif yellow_score == 1 and red_score == 2:
                 if table_type != RED:
-                    table[row.yellow_id]["overtime_losses"] += 1
+                    table[row.yellow_id]["overtimeLosses"] += 1
                     table[row.yellow_id]["points"] += 1
                 if table_type != YELLOW:
-                    table[row.red_id]["overtime_wins"] += 1
+                    table[row.red_id]["overtimeWins"] += 1
                     table[row.yellow_id]["points"] += 2
             elif yellow_score == 0 and red_score == 2:
                 if table_type != RED:
@@ -280,8 +278,8 @@ def calculate_table(league_level, table_type):
     standings = table.values()
 
     standings.sort(key=lambda row: row["player"]["name"])
-    standings.sort(key=lambda row: row["goals_for"] - row["goals_against"], reverse=True)
-    standings.sort(key=lambda row: row["overtime_wins"])
+    standings.sort(key=lambda row: row["goalsFor"] - row["goalsAgainst"], reverse=True)
+    standings.sort(key=lambda row: row["overtimeWins"])
     standings.sort(key=lambda row: row["wins"])
     standings.sort(key=lambda row: row["points"])
 
