@@ -39,7 +39,7 @@ class MatchesView(View):
             FROM core_match
             JOIN core_player red ON core_match.red_id = red.id
             JOIN core_player yellow ON core_match.yellow_id = yellow.id
-            JOIN core_day day ON core_match.day_id = day.number
+            JOIN core_day day ON core_match.day_id = day.id
             JOIN core_league ON day.league_id = core_league.id
             JOIN core_season ON core_league.season_id = core_season.id
             WHERE core_league.level = %s
