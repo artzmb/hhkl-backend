@@ -26,7 +26,7 @@ class Player(models.Model):
 
 class Day(models.Model):
     league = models.ForeignKey(League)
-    number = models.IntegerField(primary_key=True, unique=True)
+    number = models.IntegerField()
 
     def __unicode__(self):
         return "S%dL%s Day #%d" % (self.league.season_id, self.league_id, self.number,)

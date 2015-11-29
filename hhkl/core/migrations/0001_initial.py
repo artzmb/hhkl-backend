@@ -13,7 +13,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Day',
             fields=[
-                ('number', models.IntegerField(unique=True, serialize=False, primary_key=True)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('number', models.IntegerField()),
             ],
         ),
         migrations.CreateModel(
@@ -59,7 +60,7 @@ class Migration(migrations.Migration):
             name='Table',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('type', models.IntegerField(choices=[(0, b'Brief'), (1, b'Yellow'), (2, b'Red')])),
+                ('type', models.CharField(max_length=50, choices=[(b'brief', b'Brief'), (b'yellow', b'Yellow'), (b'red', b'Red')])),
                 ('league', models.OneToOneField(to='core.League')),
             ],
         ),
