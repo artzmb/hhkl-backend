@@ -56,12 +56,12 @@ class Period(models.Model):
 
 class Table(models.Model):
     TYPES = (
-        (0, 'Brief'),
-        (1, 'Yellow'),
-        (2, 'Red')
+        ('brief', 'Brief'),
+        ('yellow', 'Yellow'),
+        ('red', 'Red')
     )
     league = models.OneToOneField(League)
-    type = models.IntegerField(choices=TYPES)
+    type = models.CharField(choices=TYPES, max_length=50)
 
 
 class TableRow(models.Model):

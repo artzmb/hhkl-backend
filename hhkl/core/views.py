@@ -3,6 +3,8 @@ from collections import namedtuple
 
 from django.db import connection
 from django.http import HttpResponse
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import TemplateView, View
 
 from core.models import Day, Season, Match, Period
@@ -102,4 +104,59 @@ class PlayersView(View):
 
         return HttpResponse(json.dumps({"players": players}), content_type="application/json")
 
-    
+
+class TableView(View):
+    pass
+
+
+class MatchView(View):
+    @method_decorator(csrf_exempt)
+    def dispatch(self, request, *args, **kwargs):
+        return super(MatchView, self).dispatch(request, *args, **kwargs)
+
+    def patch(self, request, *args, **kwargs):
+        match_id = kwargs["match_id"]
+
+        try:
+            body = json.loads(request.body)
+        except ValueError:
+            return HttpResponse(status=400)
+
+        try:
+            match = Match.objects.select_related().get(pk=match_id)
+        except Match.DoesNotExist:
+            return HttpResponse(status=404)
+
+        for key in body.keys():
+            if key != "status" and key != "score":
+                return HttpResponse(status=400)
+
+        if "status" in body:
+            match.status = body["status"]
+            match.save()
+        if "score" in body:
+            Period.objects.filter(match_id=match).delete()
+            for period in body["score"]:
+                p = Period(match=match, yellow=period[0], red=period[1])
+                p.save()
+
+        response = {
+            "id": match.id,
+            "yellow": {
+                "id": match.yellow.id,
+                "name": match.yellow.name,
+                "alias": match.yellow.alias,
+            },
+            "red": {
+                "id": match.red.id,
+                "name": match.red.name,
+                "alias": match.red.alias,
+            },
+            "score": []
+        }
+
+        periods = Period.objects.filter(match_id=match)
+        for period in periods:
+            response["score"].append((period.yellow, period.red,))
+
+        return HttpResponse(json.dumps(response), content_type="application/json")
