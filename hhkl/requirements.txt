@@ -5,3 +5,4 @@ gunicorn==19.4.1
 paramiko==1.16
 psycopg2==2.6.1
 pycrypto==2.6.1
+django-tastypie==0.12.2

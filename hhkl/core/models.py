@@ -53,9 +53,6 @@ class Period(models.Model):
     yellow = models.IntegerField()
     red = models.IntegerField()
 
-    def __unicode__(self):
-        return "%d:%d", (self.yellow, self.red, )
-
 
 class Table(models.Model):
     TYPES = (

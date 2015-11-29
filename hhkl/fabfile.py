@@ -30,8 +30,8 @@ def deploy():
             with cd(env.app):
                 run('git pull origin master')
                 run('find . -name "*.mo" -print -delete')
-                run('python manage.py collectstatic --noinput --settings=settings.production')
-
                 run('pip install -r requirements.txt')
+                run('python manage.py collectstatic --noinput --settings=settings.production')
+                run('python manage.py migrate --settings=settings.production')
 
                 restart_webserver()
