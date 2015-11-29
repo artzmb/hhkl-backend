@@ -1,0 +1,17 @@
+# Byte-compiled files
+*.py[cod]
+
+# I18n compiled files
+*.mo
+
+# Virtual environment
+venv/
+
+# Static
+collected_static/
+
+# For security purpose
+django-generic/settings/production.py
+
+# Intellij IDEA
+.idea/
