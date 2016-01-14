@@ -25,7 +25,7 @@ class DayAdmin(admin.ModelAdmin):
 
 @admin.register(Match)
 class MatchAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('day', 'yellow', 'red', 'status',)
 
 
 @admin.register(Period)

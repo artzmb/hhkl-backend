@@ -29,6 +29,7 @@ class MatchesView(View):
             SELECT
                 core_match.id AS id,
                 day.number AS day,
+                day.active AS active,
                 yellow.id AS yellow_id,
                 yellow.name AS yellow_name,
                 yellow.alias AS yellow_alias,
@@ -63,6 +64,7 @@ class MatchesView(View):
                 days[row.day] = {}
                 days[row.day]["matches"] = []
                 days[row.day]["name"] = row.day
+                days[row.day]["active"] = row.active
             days[row.day]["matches"].append({
                 "id": row.id,
                 "yellow": {
