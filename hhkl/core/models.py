@@ -19,6 +19,7 @@ class Player(models.Model):
     name = models.CharField(max_length=200)
     alias = models.CharField(max_length=3)
     league = models.ForeignKey(League)
+    avatar = models.ImageField(null=True)
 
     def __unicode__(self):
         return "%s (league #%s)" % (self.name, self.league_id,)

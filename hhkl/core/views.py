@@ -193,7 +193,7 @@ def calculate_table(league_level, table_type):
         FROM core_match
         JOIN core_player red ON core_match.red_id = red.id
         JOIN core_player yellow ON core_match.yellow_id = yellow.id
-        JOIN core_day day ON core_match.day_id = day.number
+        JOIN core_day day ON core_match.day_id = day.id
         JOIN core_league ON day.league_id = core_league.id
         JOIN core_season ON core_league.season_id = core_season.id
         WHERE core_league.level = %s
@@ -266,20 +266,20 @@ def calculate_table(league_level, table_type):
                     table[row.yellow_id]["points"] += 2
                 if table_type != YELLOW:
                     table[row.red_id]["overtimeLosses"] += 1
-                    table[row.yellow_id]["points"] += 1
+                    table[row.red_id]["points"] += 1
             elif yellow_score == 1 and red_score == 2:
                 if table_type != RED:
                     table[row.yellow_id]["overtimeLosses"] += 1
                     table[row.yellow_id]["points"] += 1
                 if table_type != YELLOW:
                     table[row.red_id]["overtimeWins"] += 1
-                    table[row.yellow_id]["points"] += 2
+                    table[row.red_id]["points"] += 2
             elif yellow_score == 0 and red_score == 2:
                 if table_type != RED:
                     table[row.yellow_id]["losses"] += 1
                 if table_type != YELLOW:
                     table[row.red_id]["wins"] += 1
-                    table[row.yellow_id]["points"] += 3
+                    table[row.red_id]["points"] += 3
 
     standings = table.values()
 
