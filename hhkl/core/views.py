@@ -81,7 +81,9 @@ class MatchesView(View):
                 "score": scores.get(row.id)
             })
 
-        return HttpResponse(json.dumps({"days": days.values()}), content_type="application/json")
+        response = HttpResponse(json.dumps({"days": days.values()}), content_type="application/json")
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
 
 
 class PlayersView(View):
@@ -106,7 +108,9 @@ class PlayersView(View):
                 "alias": row.alias,
             })
 
-        return HttpResponse(json.dumps({"players": players}), content_type="application/json")
+        response = HttpResponse(json.dumps({"players": players}), content_type="application/json")
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
 
 
 class TableView(View):
@@ -119,7 +123,9 @@ class TableView(View):
 
         standings = calculate_table(league_level, table_type)
 
-        return HttpResponse(json.dumps({"standings": standings}), content_type="application/json")
+        response = HttpResponse(json.dumps({"standings": standings}), content_type="application/json")
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
 
 
 class MatchView(View):
@@ -159,7 +165,7 @@ class MatchView(View):
                 p = Period(match=match, yellow=period[0], red=period[1])
                 p.save()
 
-        response = {
+        data = {
             "id": match.id,
             "yellow": {
                 "id": match.yellow.id,
@@ -179,7 +185,9 @@ class MatchView(View):
         for period in periods:
             response["score"].append((period.yellow, period.red,))
 
-        return HttpResponse(json.dumps(response), content_type="application/json")
+        response = HttpResponse(json.dumps(data), content_type="application/json")
+        response["Access-Control-Allow-Origin"] = "*"
+        return response
 
 
 def calculate_table(league_level, table_type):
