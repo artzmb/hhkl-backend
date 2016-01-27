@@ -109,7 +109,6 @@ class PlayersView(View):
             })
 
         response = HttpResponse(json.dumps({"players": players}), content_type="application/json")
-        response["Access-Control-Allow-Origin"] = "*"
         return response
 
 
@@ -124,7 +123,6 @@ class TableView(View):
         standings = calculate_table(league_level, table_type)
 
         response = HttpResponse(json.dumps({"standings": standings}), content_type="application/json")
-        response["Access-Control-Allow-Origin"] = "*"
         return response
 
 
@@ -186,7 +184,6 @@ class MatchView(View):
             response["score"].append((period.yellow, period.red,))
 
         response = HttpResponse(json.dumps(data), content_type="application/json")
-        response["Access-Control-Allow-Origin"] = "*"
         return response
 
 
