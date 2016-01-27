@@ -15,3 +15,8 @@ django-generic/settings/production.py
 
 # Intellij IDEA
 .idea/
+
+#Server
+nginx.conf
+logs/
+gunicorn.conf.py
